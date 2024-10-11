@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Resume Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Free Resume Creator</h1>
+        <form id="resumeForm">
+            <input type="text" id="name" placeholder="Full Name" required>
+            <input type="tel" id="phone" placeholder="Phone Number" required>
+            <input type="email" id="email" placeholder="Email" required>
+            
+            <textarea id="education" placeholder="Education History" required></textarea>
+            <textarea id="skills" placeholder="Skills (comma-separated)" required></textarea>
+            <textarea id="experience" placeholder="Work Experience" required></textarea>
+            <textarea id="accomplishments" placeholder="Accomplishments" required></textarea>
+            
+            <button type="submit">Create Resume</button>
+        </form>
+        
+        <div id="resumeOutput" class="hidden">
+            <h2>Your Resume</h2>
+            <div id="resumeContent"></div>
+            <button id="printResume">Print Resume</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
