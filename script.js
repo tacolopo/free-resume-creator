@@ -204,7 +204,7 @@ function generatePDF() {
             yPosition += 5;
         });
 
-        yPosition += 10; // Add extra space after the certifications section
+        yPosition += 10;
     }
 
     // Work Experience
@@ -241,7 +241,7 @@ function generatePDF() {
 
     yPosition += 5;
 
-    // Accomplishments (with bullet points)
+    
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.text('ACCOMPLISHMENTS', 20, yPosition);

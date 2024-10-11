@@ -127,7 +127,7 @@ input::placeholder, textarea::placeholder {
 }
 
 button[type="submit"] {
-    background-color: #20B2AA; /* Light Sea Green */
+    background-color: #20B2AA;
     color: white;
     font-weight: bold;
     font-size: 1.1em;
@@ -137,14 +137,27 @@ button[type="submit"] {
 }
 
 button[type="submit"]:hover {
-    background-color: #1A8F89; /* Darker shade for hover effect */
+    background-color: #1A8F89;
 }
 
 #generatePDF {
     background-color: #20B2AA;
-    /* ... other properties ... */
 }
 
 #generatePDF:hover {
     background-color: #1A8F89;
+}
+
+footer {
+    text-align: center;
+    padding: 15px 0;
+    font-size: 0.5em;
+    color: #666;
+    max-width: 60%;
+    margin: 0 auto;
+}
+
+footer p {
+    margin: 0;
+    line-height: 1.5;
 }
