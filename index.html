@@ -3,31 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto Resume Generator</title>
+    <title>Resume Generator</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>Free Resume Creator</h1>
+        <h1>Free Resume Generator</h1>
         <form id="resumeForm">
-            <input type="text" id="name" placeholder="Full Name" required>
-            <input type="tel" id="phone" placeholder="Phone Number" required>
-            <input type="email" id="email" placeholder="Email" required>
+            <h2>Personal Information</h2>
+            <input type="text" id="name" placeholder="Full Name (e.g., John Doe)" required>
+            <input type="tel" id="phone" placeholder="Phone Number (e.g., 123-456-7890)" required>
+            <input type="email" id="email" placeholder="Email (e.g., johndoe@example.com)" required>
             
-            <textarea id="education" placeholder="Education History" required></textarea>
-            <textarea id="skills" placeholder="Skills (comma-separated)" required></textarea>
-            <textarea id="experience" placeholder="Work Experience" required></textarea>
-            <textarea id="accomplishments" placeholder="Accomplishments" required></textarea>
+            <h2>Professional Summary</h2>
+            <textarea id="summary" placeholder="Brief overview of your professional background and key strengths (2-3 sentences)" required></textarea>
             
-            <button type="submit">Create Resume</button>
+            <h2>Skills</h2>
+            <textarea id="skills" placeholder="List your key skills, separated by commas (e.g., Java, Python, Project Management, Agile Methodologies)" required></textarea>
+            
+            <h2>Education</h2>
+            <div id="educationEntries">
+                <div class="education-entry">
+                    <input type="text" class="degree" placeholder="Degree (e.g., Bachelor of Science in Computer Science)" required>
+                    <input type="text" class="university" placeholder="University (e.g., University of California, Berkeley)" required>
+                    <input type="text" class="year" placeholder="Year (e.g., 2015-2019)" required>
+                </div>
+            </div>
+            <button type="button" id="addEducation">Add Education</button>
+            
+            <h2>Certifications (Optional)</h2>
+            <div id="certificationEntries">
+                <!-- Initial entry is empty -->
+            </div>
+            <button type="button" id="addCertification">Add Certification</button>
+            
+            <h2>Work Experience</h2>
+            <div id="workExperiences">
+                <div class="work-experience">
+                    <input type="text" class="company" placeholder="Company (e.g., Tech Innovations Inc.)" required>
+                    <input type="text" class="title" placeholder="Job Title (e.g., Senior Software Engineer)" required>
+                    <input type="text" class="period" placeholder="Time Period (e.g., January 2020 - Present)" required>
+                    <textarea class="description" placeholder="Job Description (e.g., Led a team of 5 developers in creating a new mobile app...)" required></textarea>
+                </div>
+            </div>
+            <button type="button" id="addWorkExperience">Add Work Experience</button>
+            
+            <h2>Accomplishments</h2>
+            <textarea id="accomplishments" placeholder="List your major accomplishments, one per line" required></textarea>
+            
+            <button type="submit">Generate PDF Resume</button>
         </form>
-        
-        <div id="resumeOutput" class="hidden">
-            <h2>Your Resume</h2>
-            <div id="resumeContent"></div>
-            <button id="printResume">Print Resume</button>
-        </div>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
