@@ -280,16 +280,25 @@ function generatePDF() {
         const period = exp.querySelector('.period').value;
         const description = exp.querySelector('.description').value;
 
+        // Job Title - Bold and slightly larger
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
-        doc.text(`${company} - ${title}`, 20, yPosition);
+        doc.text(title, 20, yPosition);
         yPosition += 4;
         
+        // Company name - Regular weight
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.text(company, 20, yPosition);
+        yPosition += 4;
+        
+        // Time period - Italic
         doc.setFontSize(10);
         doc.setFont('helvetica', 'italic');
         doc.text(period, 20, yPosition);
         yPosition += 4;
 
+        // Description - Normal
         doc.setFont('helvetica', 'normal');
         const descLines = doc.splitTextToSize(description, 170);
         doc.text(descLines, 20, yPosition);
