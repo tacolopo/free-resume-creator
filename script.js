@@ -274,7 +274,7 @@ function generatePDF() {
             yPosition = 20;
         }
 
-        if (index > 0) yPosition += 2; // Small gap between entries
+        if (index > 0) yPosition += 3; // Increased gap between work experience entries
         const company = exp.querySelector('.company').value;
         const title = exp.querySelector('.title').value;
         const period = exp.querySelector('.period').value;
@@ -284,28 +284,28 @@ function generatePDF() {
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
         doc.text(title, 20, yPosition);
-        yPosition += 3.5; // Increased to prevent overlap
+        yPosition += 4.5; // More space after title
         
         // Company name - Regular weight
         doc.setFontSize(11);
         doc.setFont('helvetica', 'normal');
         doc.text(company, 20, yPosition);
-        yPosition += 3.5; // Increased to prevent overlap
+        yPosition += 4; // More space after company
         
         // Time period - Italic
         doc.setFontSize(10);
         doc.setFont('helvetica', 'italic');
         doc.text(period, 20, yPosition);
-        yPosition += 3; // Adequate space before description
+        yPosition += 4; // More space before description
 
         // Description - Normal
         doc.setFont('helvetica', 'normal');
         const descLines = doc.splitTextToSize(description, 170);
         doc.text(descLines, 20, yPosition);
-        yPosition += (descLines.length * 3.5) + 2; // Slightly increased line height and padding
+        yPosition += (descLines.length * 4) + 3; // Increased line height and padding
     });
 
-    yPosition += 2; // Space before next section
+    yPosition += 3; // More space before next section
 
     
     doc.setFontSize(14);
