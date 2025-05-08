@@ -2,6 +2,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add delete buttons to initial entries
     addDeleteButtons();
 
+    // Handle photo upload
+    document.getElementById('photoInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewImage').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
     document.getElementById('resumeForm').addEventListener('submit', function(e) {
         e.preventDefault();
         generatePDF();
@@ -85,6 +97,16 @@ function generatePDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
+    // Add photo if uploaded
+    const photoImg = document.getElementById('previewImage');
+    if (photoImg.src !== 'placeholder-avatar.png') {
+        try {
+            doc.addImage(photoImg.src, 'JPEG', 20, 15, 30, 30, undefined, 'FAST');
+        } catch (e) {
+            console.error('Failed to add photo to PDF:', e);
+        }
+    }
+
     const name = document.getElementById('name').value.toUpperCase();
     const phone = document.getElementById('phone').value;
     const email = document.getElementById('email').value;
@@ -97,15 +119,15 @@ function generatePDF() {
 
     // Name
     doc.setFontSize(24);
-    doc.text(name, 105, 20, { align: 'center' });
+    doc.text(name, 60, 25, { align: 'left' });
 
     // Contact info
     doc.setFontSize(10);
-    doc.text(`${phone} | ${email}`, 105, 30, { align: 'center' });
+    doc.text(`${phone} | ${email}`, 60, 35, { align: 'left' });
 
     // Horizontal line
     doc.setLineWidth(0.5);
-    doc.line(20, 35, 190, 35);
+    doc.line(20, 45, 190, 45);
 
     // Function to add a section
     function addSection(title, content, y) {
@@ -121,7 +143,7 @@ function generatePDF() {
         return y + 8 + (lines.length * 5);
     }
 
-    let yPosition = 45;
+    let yPosition = 55;
     yPosition = addSection('Professional Summary', summary, yPosition);
     yPosition += 10;
 
@@ -177,7 +199,7 @@ function generatePDF() {
 
     yPosition += 10;
 
-    // Certifications (Optional)
+    // Certifications (Optional) - Two columns
     const certificationEntries = document.querySelectorAll('.certification-entry');
     if (certificationEntries.length > 0) {
         doc.setFontSize(14);
@@ -187,27 +209,56 @@ function generatePDF() {
         doc.line(20, yPosition + 1, 190, yPosition + 1);
         yPosition += 8;
 
-        certificationEntries.forEach((entry, index) => {
-            if (index > 0) yPosition += 5;
+        const middleIndex = Math.ceil(certificationEntries.length / 2);
+        const leftColumnCerts = Array.from(certificationEntries).slice(0, middleIndex);
+        const rightColumnCerts = Array.from(certificationEntries).slice(middleIndex);
+        
+        let leftYPosition = yPosition;
+        let rightYPosition = yPosition;
+
+        // Left column
+        leftColumnCerts.forEach((entry) => {
             const certName = entry.querySelector('.certification-name').value;
             const certOrg = entry.querySelector('.certification-org').value;
             const certDate = entry.querySelector('.certification-date').value;
 
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text(`${certName}`, 20, yPosition);
-            yPosition += 5;
+            doc.text(`${certName}`, 20, leftYPosition);
+            leftYPosition += 5;
             
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            doc.text(`${certOrg} | ${certDate}`, 20, yPosition);
-            yPosition += 5;
+            doc.text(`${certOrg} | ${certDate}`, 20, leftYPosition);
+            leftYPosition += 10;
         });
 
-        yPosition += 10;
+        // Right column
+        rightColumnCerts.forEach((entry) => {
+            const certName = entry.querySelector('.certification-name').value;
+            const certOrg = entry.querySelector('.certification-org').value;
+            const certDate = entry.querySelector('.certification-date').value;
+
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${certName}`, 105, rightYPosition);
+            rightYPosition += 5;
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`${certOrg} | ${certDate}`, 105, rightYPosition);
+            rightYPosition += 10;
+        });
+
+        yPosition = Math.max(leftYPosition, rightYPosition) + 5;
     }
 
-    // Work Experience
+    // Work Experience - Add new page if needed
+    if (yPosition > 240) {
+        doc.addPage();
+        yPosition = 20;
+    }
+
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.text('WORK EXPERIENCE', 20, yPosition);
@@ -217,6 +268,12 @@ function generatePDF() {
 
     const workExperiences = document.querySelectorAll('.work-experience');
     workExperiences.forEach((exp, index) => {
+        // Check if we need a new page
+        if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 20;
+        }
+
         if (index > 0) yPosition += 5;
         const company = exp.querySelector('.company').value;
         const title = exp.querySelector('.title').value;

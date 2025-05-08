@@ -18,11 +18,19 @@
     <div class="container">
         <h1>Free Resume Generator</h1>
         <form id="resumeForm">
-            <h2>Personal Information</h2>
-            <input type="text" id="name" placeholder="Full Name (e.g., John Doe)" required>
-            <input type="tel" id="phone" placeholder="Phone Number (e.g., 123-456-7890)" required>
-            <input type="email" id="email" placeholder="Email (e.g., johndoe@example.com)" required>
-            
+            <div class="header-section">
+                <div class="photo-upload">
+                    <div class="photo-preview" id="photoPreview">
+                        <img id="previewImage" src="placeholder-avatar.png" alt="Profile Photo">
+                    </div>
+                    <input type="file" id="photoInput" accept="image/*">
+                </div>
+                <div class="personal-info">
+                    <input type="text" id="name" placeholder="Full Name (e.g., John Doe)" required>
+                    <input type="tel" id="phone" placeholder="Phone Number (e.g., 123-456-7890)" required>
+                    <input type="email" id="email" placeholder="Email (e.g., johndoe@example.com)" required>
+                </div>
+            </div>
             <h2>Professional Summary</h2>
             <textarea id="summary" placeholder="Brief overview of your professional background and key strengths (2-3 sentences)" required></textarea>
             
