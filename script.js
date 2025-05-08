@@ -274,7 +274,7 @@ function generatePDF() {
             yPosition = 20;
         }
 
-        if (index > 0) yPosition += 5;
+        if (index > 0) yPosition += 2;
         const company = exp.querySelector('.company').value;
         const title = exp.querySelector('.title').value;
         const period = exp.querySelector('.period').value;
@@ -283,20 +283,20 @@ function generatePDF() {
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
         doc.text(`${company} - ${title}`, 20, yPosition);
-        yPosition += 5;
+        yPosition += 4;
         
         doc.setFontSize(10);
         doc.setFont('helvetica', 'italic');
         doc.text(period, 20, yPosition);
-        yPosition += 5;
+        yPosition += 4;
 
         doc.setFont('helvetica', 'normal');
         const descLines = doc.splitTextToSize(description, 170);
         doc.text(descLines, 20, yPosition);
-        yPosition += descLines.length * 5 + 5;
+        yPosition += (descLines.length * 4) + 3;
     });
 
-    yPosition += 5;
+    yPosition += 3;
 
     
     doc.setFontSize(14);
