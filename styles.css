@@ -196,3 +196,114 @@ footer p {
 #photoInput {
     width: 150px;
 }
+
+/* Drag and Drop Styles */
+.section-reorder-info {
+    background-color: #e8f5e8;
+    border: 1px solid #4CAF50;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.section-reorder-info p {
+    margin: 0;
+    color: #2d5d2d;
+    font-size: 0.9em;
+}
+
+.draggable-sections {
+    min-height: 50px;
+}
+
+.resume-section {
+    background: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    padding: 15px;
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: grab;
+}
+
+.resume-section:hover {
+    border-color: #4CAF50;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+}
+
+.resume-section.dragging {
+    opacity: 0.5;
+    transform: rotate(2deg);
+    cursor: grabbing;
+    border-color: #4CAF50;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.resume-section.drag-over {
+    border-color: #4CAF50;
+    background-color: #f8fff8;
+    border-style: dashed;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.section-header h2 {
+    margin: 0;
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+    flex-grow: 1;
+}
+
+.drag-handle {
+    color: #999;
+    font-size: 18px;
+    cursor: grab;
+    padding: 5px;
+    user-select: none;
+    margin-left: 10px;
+}
+
+.drag-handle:hover {
+    color: #4CAF50;
+}
+
+.resume-section.dragging .drag-handle {
+    cursor: grabbing;
+}
+
+/* Ensure sections maintain their internal styling */
+.resume-section h2 {
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 5px;
+}
+
+.resume-section .section-header h2 {
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 5px;
+    margin-bottom: 0;
+}
+
+/* Drop zone indicator */
+.drop-indicator {
+    height: 4px;
+    background-color: #4CAF50;
+    border-radius: 2px;
+    margin: 5px 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.drop-indicator.active {
+    opacity: 1;
+}

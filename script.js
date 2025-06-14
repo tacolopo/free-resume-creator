@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Add delete buttons to initial entries
     addDeleteButtons();
+    
+    // Initialize drag and drop functionality
+    initializeDragAndDrop();
 
     // Handle photo upload
     document.getElementById('photoInput').addEventListener('change', function(e) {
@@ -32,6 +35,80 @@ document.addEventListener('DOMContentLoaded', function() {
         addCertification();
     });
 });
+
+// Drag and Drop Functionality
+function initializeDragAndDrop() {
+    const draggableSections = document.getElementById('draggableSections');
+    const sections = draggableSections.querySelectorAll('.resume-section');
+    
+    sections.forEach(section => {
+        section.addEventListener('dragstart', handleDragStart);
+        section.addEventListener('dragend', handleDragEnd);
+        section.addEventListener('dragover', handleDragOver);
+        section.addEventListener('dragenter', handleDragEnter);
+        section.addEventListener('dragleave', handleDragLeave);
+        section.addEventListener('drop', handleDrop);
+    });
+}
+
+let draggedElement = null;
+
+function handleDragStart(e) {
+    draggedElement = this;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.outerHTML);
+}
+
+function handleDragEnd(e) {
+    this.classList.remove('dragging');
+    // Clean up any remaining drag-over classes
+    document.querySelectorAll('.resume-section').forEach(section => {
+        section.classList.remove('drag-over');
+    });
+}
+
+function handleDragOver(e) {
+    if (e.preventDefault) {
+        e.preventDefault(); // Allows us to drop
+    }
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+}
+
+function handleDragEnter(e) {
+    if (this !== draggedElement) {
+        this.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    this.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation(); // Stops some browsers from redirecting
+    }
+    
+    if (draggedElement !== this) {
+        const draggableSections = document.getElementById('draggableSections');
+        const allSections = Array.from(draggableSections.children);
+        const draggedIndex = allSections.indexOf(draggedElement);
+        const targetIndex = allSections.indexOf(this);
+        
+        if (draggedIndex < targetIndex) {
+            // Insert after target
+            draggableSections.insertBefore(draggedElement, this.nextSibling);
+        } else {
+            // Insert before target
+            draggableSections.insertBefore(draggedElement, this);
+        }
+    }
+    
+    this.classList.remove('drag-over');
+    return false;
+}
 
 function addDeleteButtons() {
     document.querySelectorAll('.work-experience, .education-entry, .certification-entry').forEach(entry => {
@@ -110,9 +187,6 @@ function generatePDF() {
     const name = document.getElementById('name').value.toUpperCase();
     const phone = document.getElementById('phone').value;
     const email = document.getElementById('email').value;
-    const summary = document.getElementById('summary').value;
-    const skills = document.getElementById('skills').value.split(',').map(skill => skill.trim());
-    const accomplishments = document.getElementById('accomplishments').value.split('\n').map(acc => acc.trim()).filter(acc => acc !== '');
 
     // Set font
     doc.setFont('helvetica', 'normal');
@@ -129,25 +203,65 @@ function generatePDF() {
     doc.setLineWidth(0.5);
     doc.line(20, 45, 190, 45);
 
-    // Function to add a section
-    function addSection(title, content, y) {
-        doc.setFontSize(14);
-        doc.setFont('helvetica', 'bold');
-        doc.text(title.toUpperCase(), 20, y);
-        doc.setLineWidth(0.5);
-        doc.line(20, y + 1, 190, y + 1);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(10);
-        const lines = doc.splitTextToSize(content, 170);
-        doc.text(lines, 20, y + 8);
-        return y + 8 + (lines.length * 5);
-    }
-
     let yPosition = 55;
-    yPosition = addSection('Professional Summary', summary, yPosition);
-    yPosition += 10;
 
-    // Skills (two columns with bullet points)
+    // Get sections in their current order
+    const sectionsContainer = document.getElementById('draggableSections');
+    const orderedSections = Array.from(sectionsContainer.children);
+    
+    // Process each section in the order they appear
+    orderedSections.forEach(sectionElement => {
+        const sectionType = sectionElement.getAttribute('data-section');
+        
+        switch(sectionType) {
+            case 'summary':
+                yPosition = addSummarySection(doc, yPosition);
+                break;
+            case 'skills':
+                yPosition = addSkillsSection(doc, yPosition);
+                break;
+            case 'education':
+                yPosition = addEducationSection(doc, yPosition);
+                break;
+            case 'certifications':
+                yPosition = addCertificationsSection(doc, yPosition);
+                break;
+            case 'experience':
+                yPosition = addExperienceSection(doc, yPosition);
+                break;
+            case 'accomplishments':
+                yPosition = addAccomplishmentsSection(doc, yPosition);
+                break;
+        }
+        yPosition += 10; // Add spacing between sections
+    });
+
+    doc.save('resume.pdf');
+}
+
+// Helper function to add a section
+function addSection(doc, title, content, y) {
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(title.toUpperCase(), 20, y);
+    doc.setLineWidth(0.5);
+    doc.line(20, y + 1, 190, y + 1);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    const lines = doc.splitTextToSize(content, 170);
+    doc.text(lines, 20, y + 8);
+    return y + 8 + (lines.length * 5);
+}
+
+// Individual section generators
+function addSummarySection(doc, yPosition) {
+    const summary = document.getElementById('summary').value;
+    return addSection(doc, 'Professional Summary', summary, yPosition);
+}
+
+function addSkillsSection(doc, yPosition) {
+    const skills = document.getElementById('skills').value.split(',').map(skill => skill.trim());
+    
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.text('SKILLS', 20, yPosition);
@@ -169,9 +283,10 @@ function generatePDF() {
         doc.text(`• ${skill}`, 105, yPosition + (index * 5));
     });
 
-    yPosition += Math.max(leftColumnSkills.length, rightColumnSkills.length) * 5 + 10;
+    return yPosition + Math.max(leftColumnSkills.length, rightColumnSkills.length) * 5;
+}
 
-    // Education
+function addEducationSection(doc, yPosition) {
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.text('EDUCATION', 20, yPosition);
@@ -197,63 +312,66 @@ function generatePDF() {
         yPosition += 5;
     });
 
-    yPosition += 10;
+    return yPosition;
+}
 
-    // Certifications (Optional) - Two columns
+function addCertificationsSection(doc, yPosition) {
     const certificationEntries = document.querySelectorAll('.certification-entry');
-    if (certificationEntries.length > 0) {
-        doc.setFontSize(14);
+    if (certificationEntries.length === 0) return yPosition;
+    
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('CERTIFICATIONS', 20, yPosition);
+    doc.setLineWidth(0.5);
+    doc.line(20, yPosition + 1, 190, yPosition + 1);
+    yPosition += 8;
+
+    const middleIndex = Math.ceil(certificationEntries.length / 2);
+    const leftColumnCerts = Array.from(certificationEntries).slice(0, middleIndex);
+    const rightColumnCerts = Array.from(certificationEntries).slice(middleIndex);
+    
+    let leftYPosition = yPosition;
+    let rightYPosition = yPosition;
+
+    // Left column
+    leftColumnCerts.forEach((entry) => {
+        const certName = entry.querySelector('.certification-name').value;
+        const certOrg = entry.querySelector('.certification-org').value;
+        const certDate = entry.querySelector('.certification-date').value;
+
+        doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
-        doc.text('CERTIFICATIONS', 20, yPosition);
-        doc.setLineWidth(0.5);
-        doc.line(20, yPosition + 1, 190, yPosition + 1);
-        yPosition += 8;
-
-        const middleIndex = Math.ceil(certificationEntries.length / 2);
-        const leftColumnCerts = Array.from(certificationEntries).slice(0, middleIndex);
-        const rightColumnCerts = Array.from(certificationEntries).slice(middleIndex);
+        doc.text(`${certName}`, 20, leftYPosition);
+        leftYPosition += 5;
         
-        let leftYPosition = yPosition;
-        let rightYPosition = yPosition;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${certOrg} | ${certDate}`, 20, leftYPosition);
+        leftYPosition += 10;
+    });
 
-        // Left column
-        leftColumnCerts.forEach((entry) => {
-            const certName = entry.querySelector('.certification-name').value;
-            const certOrg = entry.querySelector('.certification-org').value;
-            const certDate = entry.querySelector('.certification-date').value;
+    // Right column
+    rightColumnCerts.forEach((entry) => {
+        const certName = entry.querySelector('.certification-name').value;
+        const certOrg = entry.querySelector('.certification-org').value;
+        const certDate = entry.querySelector('.certification-date').value;
 
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`${certName}`, 20, leftYPosition);
-            leftYPosition += 5;
-            
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`${certOrg} | ${certDate}`, 20, leftYPosition);
-            leftYPosition += 10;
-        });
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${certName}`, 105, rightYPosition);
+        rightYPosition += 5;
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${certOrg} | ${certDate}`, 105, rightYPosition);
+        rightYPosition += 10;
+    });
 
-        // Right column
-        rightColumnCerts.forEach((entry) => {
-            const certName = entry.querySelector('.certification-name').value;
-            const certOrg = entry.querySelector('.certification-org').value;
-            const certDate = entry.querySelector('.certification-date').value;
+    return Math.max(leftYPosition, rightYPosition) + 5;
+}
 
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`${certName}`, 105, rightYPosition);
-            rightYPosition += 5;
-            
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`${certOrg} | ${certDate}`, 105, rightYPosition);
-            rightYPosition += 10;
-        });
-
-        yPosition = Math.max(leftYPosition, rightYPosition) + 5;
-    }
-
-    // Work Experience - Add new page if needed
+function addExperienceSection(doc, yPosition) {
+    // Add new page if needed
     if (yPosition > 240) {
         doc.addPage();
         yPosition = 20;
@@ -274,7 +392,7 @@ function generatePDF() {
             yPosition = 20;
         }
 
-        if (index > 0) yPosition += 3; // Increased gap between work experience entries
+        if (index > 0) yPosition += 3;
         const company = exp.querySelector('.company').value;
         const title = exp.querySelector('.title').value;
         const period = exp.querySelector('.period').value;
@@ -284,29 +402,32 @@ function generatePDF() {
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
         doc.text(title, 20, yPosition);
-        yPosition += 4.5; // More space after title
+        yPosition += 4.5;
         
         // Company name - Regular weight
         doc.setFontSize(11);
         doc.setFont('helvetica', 'normal');
         doc.text(company, 20, yPosition);
-        yPosition += 4; // More space after company
+        yPosition += 4;
         
         // Time period - Italic
         doc.setFontSize(10);
         doc.setFont('helvetica', 'italic');
         doc.text(period, 20, yPosition);
-        yPosition += 4; // More space before description
+        yPosition += 4;
 
         // Description - Normal
         doc.setFont('helvetica', 'normal');
         const descLines = doc.splitTextToSize(description, 170);
         doc.text(descLines, 20, yPosition);
-        yPosition += (descLines.length * 4) + 3; // Increased line height and padding
+        yPosition += (descLines.length * 4) + 3;
     });
 
-    yPosition += 3; // More space before next section
+    return yPosition + 3;
+}
 
+function addAccomplishmentsSection(doc, yPosition) {
+    const accomplishments = document.getElementById('accomplishments').value.split('\n').map(acc => acc.trim()).filter(acc => acc !== '');
     
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
@@ -323,5 +444,5 @@ function generatePDF() {
         yPosition += accLines.length * 5 + 2;
     });
 
-    doc.save('resume.pdf');
+    return yPosition;
 }
