@@ -449,7 +449,7 @@ function addAccomplishmentsSection(doc, yPosition) {
 }
 
 async function generateWord() {
-    const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, TabStopPosition, TabStopType, BorderStyle } = docx;
+    const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, HeadingLevel, AlignmentType, WidthType, BorderStyle, ImageRun } = docx;
 
     // Get form data
     const name = document.getElementById('name').value;
@@ -462,29 +462,150 @@ async function generateWord() {
     
     const documentSections = [];
 
-    // Header with name and contact info
+    // Header section with photo and contact info (mimicking PDF layout)
+    const headerChildren = [];
+    
+    // Check if photo is uploaded
+    const photoImg = document.getElementById('previewImage');
+    if (photoImg.src && !photoImg.src.includes('placeholder-avatar.png')) {
+        try {
+            // Convert image to base64 for Word document
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 120;  // 30 * 4 (scaling for Word)
+            canvas.height = 120;
+            
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, 120, 120);
+            };
+            img.src = photoImg.src;
+            
+            // Create table for header layout (photo + name/contact)
+            const headerTable = new Table({
+                rows: [
+                    new TableRow({
+                        children: [
+                            new TableCell({
+                                children: [
+                                    new Paragraph({
+                                        children: [
+                                            new TextRun({
+                                                text: "[Photo]",
+                                                size: 16,
+                                                color: "888888"
+                                            })
+                                        ],
+                                        alignment: AlignmentType.CENTER,
+                                    })
+                                ],
+                                width: { size: 20, type: WidthType.PERCENTAGE },
+                                borders: {
+                                    top: { style: BorderStyle.NONE },
+                                    bottom: { style: BorderStyle.NONE },
+                                    left: { style: BorderStyle.NONE },
+                                    right: { style: BorderStyle.NONE },
+                                }
+                            }),
+                            new TableCell({
+                                children: [
+                                    new Paragraph({
+                                        children: [
+                                            new TextRun({
+                                                text: name.toUpperCase(),
+                                                bold: true,
+                                                size: 48,
+                                            }),
+                                        ],
+                                        spacing: { after: 100 },
+                                    }),
+                                    new Paragraph({
+                                        children: [
+                                            new TextRun({
+                                                text: `${phone} | ${email}`,
+                                                size: 20,
+                                            }),
+                                        ],
+                                    })
+                                ],
+                                width: { size: 80, type: WidthType.PERCENTAGE },
+                                borders: {
+                                    top: { style: BorderStyle.NONE },
+                                    bottom: { style: BorderStyle.NONE },
+                                    left: { style: BorderStyle.NONE },
+                                    right: { style: BorderStyle.NONE },
+                                }
+                            })
+                        ]
+                    })
+                ],
+                width: { size: 100, type: WidthType.PERCENTAGE },
+            });
+            
+            documentSections.push(headerTable);
+        } catch (e) {
+            console.error('Failed to add photo to Word document:', e);
+            // Fallback without photo
+            documentSections.push(
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text: name.toUpperCase(),
+                            bold: true,
+                            size: 48,
+                        }),
+                    ],
+                    spacing: { after: 100 },
+                }),
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text: `${phone} | ${email}`,
+                            size: 20,
+                        }),
+                    ],
+                    spacing: { after: 200 },
+                })
+            );
+        }
+    } else {
+        // No photo - just name and contact info
+        documentSections.push(
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: name.toUpperCase(),
+                        bold: true,
+                        size: 48,
+                    }),
+                ],
+                spacing: { after: 100 },
+            }),
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: `${phone} | ${email}`,
+                        size: 20,
+                    }),
+                ],
+                spacing: { after: 200 },
+            })
+        );
+    }
+
+    // Add horizontal line (mimicking PDF)
     documentSections.push(
         new Paragraph({
             children: [
                 new TextRun({
-                    text: name.toUpperCase(),
-                    bold: true,
-                    size: 48,
-                }),
-            ],
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 200 },
-        }),
-        new Paragraph({
-            children: [
-                new TextRun({
-                    text: `${phone} | ${email}`,
+                    text: "________________________________________________________________",
                     size: 20,
-                }),
+                    color: "666666"
+                })
             ],
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 400 },
-        }),
+            spacing: { after: 300 },
+        })
     );
 
     // Process each section in the draggable order
@@ -525,7 +646,7 @@ async function generateWord() {
 }
 
 function generateWordSummarySection() {
-    const { Paragraph, TextRun, HeadingLevel } = docx;
+    const { Paragraph, TextRun } = docx;
     const summary = document.getElementById('summary').value;
     
     return [
@@ -534,11 +655,20 @@ function generateWordSummarySection() {
                 new TextRun({
                     text: "PROFESSIONAL SUMMARY",
                     bold: true,
-                    size: 24,
+                    size: 28, // Matching PDF font size
                 }),
             ],
-            heading: HeadingLevel.HEADING_2,
-            spacing: { before: 400, after: 200 },
+            spacing: { before: 200, after: 50 },
+        }),
+        new Paragraph({
+            children: [
+                new TextRun({
+                    text: "________________________________________________________________",
+                    size: 16,
+                    color: "666666"
+                })
+            ],
+            spacing: { after: 150 },
         }),
         new Paragraph({
             children: [
@@ -547,13 +677,13 @@ function generateWordSummarySection() {
                     size: 20,
                 }),
             ],
-            spacing: { after: 300 },
+            spacing: { after: 200 },
         }),
     ];
 }
 
 function generateWordSkillsSection() {
-    const { Paragraph, TextRun, HeadingLevel } = docx;
+    const { Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle } = docx;
     const skills = document.getElementById('skills').value.split(',').map(skill => skill.trim());
     
     const skillsParagraphs = [
@@ -562,29 +692,88 @@ function generateWordSkillsSection() {
                 new TextRun({
                     text: "SKILLS",
                     bold: true,
-                    size: 24,
+                    size: 28,
                 }),
             ],
-            heading: HeadingLevel.HEADING_2,
-            spacing: { before: 400, after: 200 },
+            spacing: { before: 200, after: 50 },
+        }),
+        new Paragraph({
+            children: [
+                new TextRun({
+                    text: "________________________________________________________________",
+                    size: 16,
+                    color: "666666"
+                })
+            ],
+            spacing: { after: 150 },
         }),
     ];
 
-    // Create bullet points for skills
-    skills.forEach(skill => {
-        skillsParagraphs.push(
-            new Paragraph({
+    // Create two-column layout for skills (matching PDF)
+    const middleIndex = Math.ceil(skills.length / 2);
+    const leftColumnSkills = skills.slice(0, middleIndex);
+    const rightColumnSkills = skills.slice(middleIndex);
+
+    // Create table for two-column layout
+    const maxRows = Math.max(leftColumnSkills.length, rightColumnSkills.length);
+    const tableRows = [];
+
+    for (let i = 0; i < maxRows; i++) {
+        const leftSkill = leftColumnSkills[i] || '';
+        const rightSkill = rightColumnSkills[i] || '';
+
+        tableRows.push(
+            new TableRow({
                 children: [
-                    new TextRun({
-                        text: `• ${skill}`,
-                        size: 20,
+                    new TableCell({
+                        children: [
+                            new Paragraph({
+                                children: [
+                                    new TextRun({
+                                        text: leftSkill ? `• ${leftSkill}` : '',
+                                        size: 20,
+                                    }),
+                                ],
+                            })
+                        ],
+                        width: { size: 50, type: WidthType.PERCENTAGE },
+                        borders: {
+                            top: { style: BorderStyle.NONE },
+                            bottom: { style: BorderStyle.NONE },
+                            left: { style: BorderStyle.NONE },
+                            right: { style: BorderStyle.NONE },
+                        }
                     }),
-                ],
-                spacing: { after: 100 },
+                    new TableCell({
+                        children: [
+                            new Paragraph({
+                                children: [
+                                    new TextRun({
+                                        text: rightSkill ? `• ${rightSkill}` : '',
+                                        size: 20,
+                                    }),
+                                ],
+                            })
+                        ],
+                        width: { size: 50, type: WidthType.PERCENTAGE },
+                        borders: {
+                            top: { style: BorderStyle.NONE },
+                            bottom: { style: BorderStyle.NONE },
+                            left: { style: BorderStyle.NONE },
+                            right: { style: BorderStyle.NONE },
+                        }
+                    })
+                ]
             })
         );
+    }
+
+    const skillsTable = new Table({
+        rows: tableRows,
+        width: { size: 100, type: WidthType.PERCENTAGE },
     });
 
+    skillsParagraphs.push(skillsTable);
     skillsParagraphs.push(
         new Paragraph({
             children: [],
@@ -596,7 +785,7 @@ function generateWordSkillsSection() {
 }
 
 function generateWordEducationSection() {
-    const { Paragraph, TextRun, HeadingLevel } = docx;
+    const { Paragraph, TextRun } = docx;
     const educationEntries = document.querySelectorAll('.education-entry');
     
     const educationParagraphs = [
@@ -605,11 +794,20 @@ function generateWordEducationSection() {
                 new TextRun({
                     text: "EDUCATION",
                     bold: true,
-                    size: 24,
+                    size: 28,
                 }),
             ],
-            heading: HeadingLevel.HEADING_2,
-            spacing: { before: 400, after: 200 },
+            spacing: { before: 200, after: 50 },
+        }),
+        new Paragraph({
+            children: [
+                new TextRun({
+                    text: "________________________________________________________________",
+                    size: 16,
+                    color: "666666"
+                })
+            ],
+            spacing: { after: 150 },
         }),
     ];
 
@@ -633,7 +831,7 @@ function generateWordEducationSection() {
                     new TextRun({
                         text: degree,
                         bold: true,
-                        size: 22,
+                        size: 24,
                     }),
                 ],
                 spacing: { after: 100 },
@@ -645,16 +843,23 @@ function generateWordEducationSection() {
                         size: 20,
                     }),
                 ],
-                spacing: { after: 200 },
+                spacing: { after: 100 },
             })
         );
     });
+
+    educationParagraphs.push(
+        new Paragraph({
+            children: [],
+            spacing: { after: 200 },
+        })
+    );
 
     return educationParagraphs;
 }
 
 function generateWordCertificationsSection() {
-    const { Paragraph, TextRun, HeadingLevel } = docx;
+    const { Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle } = docx;
     const certificationEntries = document.querySelectorAll('.certification-entry');
     
     if (certificationEntries.length === 0) return [];
@@ -665,56 +870,140 @@ function generateWordCertificationsSection() {
                 new TextRun({
                     text: "CERTIFICATIONS",
                     bold: true,
-                    size: 24,
+                    size: 28,
                 }),
             ],
-            heading: HeadingLevel.HEADING_2,
-            spacing: { before: 400, after: 200 },
+            spacing: { before: 200, after: 50 },
+        }),
+        new Paragraph({
+            children: [
+                new TextRun({
+                    text: "________________________________________________________________",
+                    size: 16,
+                    color: "666666"
+                })
+            ],
+            spacing: { after: 150 },
         }),
     ];
 
-    certificationEntries.forEach((entry, index) => {
-        const certName = entry.querySelector('.certification-name').value;
-        const certOrg = entry.querySelector('.certification-org').value;
-        const certDate = entry.querySelector('.certification-date').value;
+    // Create two-column layout for certifications (matching PDF)
+    const middleIndex = Math.ceil(certificationEntries.length / 2);
+    const leftColumnCerts = Array.from(certificationEntries).slice(0, middleIndex);
+    const rightColumnCerts = Array.from(certificationEntries).slice(middleIndex);
+    
+    const maxRows = Math.max(leftColumnCerts.length, rightColumnCerts.length);
+    const tableRows = [];
 
-        if (index > 0) {
-            certificationParagraphs.push(
+    for (let i = 0; i < maxRows; i++) {
+        const leftCert = leftColumnCerts[i];
+        const rightCert = rightColumnCerts[i];
+
+        const leftContent = [];
+        const rightContent = [];
+
+        if (leftCert) {
+            const certName = leftCert.querySelector('.certification-name').value;
+            const certOrg = leftCert.querySelector('.certification-org').value;
+            const certDate = leftCert.querySelector('.certification-date').value;
+            
+            leftContent.push(
                 new Paragraph({
-                    children: [],
+                    children: [
+                        new TextRun({
+                            text: certName,
+                            bold: true,
+                            size: 24,
+                        }),
+                    ],
+                    spacing: { after: 50 },
+                }),
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text: `${certOrg} | ${certDate}`,
+                            size: 20,
+                        }),
+                    ],
                     spacing: { after: 100 },
                 })
             );
         }
 
-        certificationParagraphs.push(
-            new Paragraph({
+        if (rightCert) {
+            const certName = rightCert.querySelector('.certification-name').value;
+            const certOrg = rightCert.querySelector('.certification-org').value;
+            const certDate = rightCert.querySelector('.certification-date').value;
+            
+            rightContent.push(
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text: certName,
+                            bold: true,
+                            size: 24,
+                        }),
+                    ],
+                    spacing: { after: 50 },
+                }),
+                new Paragraph({
+                    children: [
+                        new TextRun({
+                            text: `${certOrg} | ${certDate}`,
+                            size: 20,
+                        }),
+                    ],
+                    spacing: { after: 100 },
+                })
+            );
+        }
+
+        tableRows.push(
+            new TableRow({
                 children: [
-                    new TextRun({
-                        text: certName,
-                        bold: true,
-                        size: 22,
+                    new TableCell({
+                        children: leftContent,
+                        width: { size: 50, type: WidthType.PERCENTAGE },
+                        borders: {
+                            top: { style: BorderStyle.NONE },
+                            bottom: { style: BorderStyle.NONE },
+                            left: { style: BorderStyle.NONE },
+                            right: { style: BorderStyle.NONE },
+                        }
                     }),
-                ],
-                spacing: { after: 100 },
-            }),
-            new Paragraph({
-                children: [
-                    new TextRun({
-                        text: `${certOrg} | ${certDate}`,
-                        size: 20,
-                    }),
-                ],
-                spacing: { after: 200 },
+                    new TableCell({
+                        children: rightContent,
+                        width: { size: 50, type: WidthType.PERCENTAGE },
+                        borders: {
+                            top: { style: BorderStyle.NONE },
+                            bottom: { style: BorderStyle.NONE },
+                            left: { style: BorderStyle.NONE },
+                            right: { style: BorderStyle.NONE },
+                        }
+                    })
+                ]
             })
         );
+    }
+
+    const certTable = new Table({
+        rows: tableRows,
+        width: { size: 100, type: WidthType.PERCENTAGE },
     });
+
+    certificationParagraphs.push(certTable);
+    certificationParagraphs.push(
+        new Paragraph({
+            children: [],
+            spacing: { after: 200 },
+        })
+    );
 
     return certificationParagraphs;
 }
 
 function generateWordExperienceSection() {
-    const { Paragraph, TextRun, HeadingLevel } = docx;
+    const { Paragraph, TextRun } = docx;
     const workExperiences = document.querySelectorAll('.work-experience');
     
     const experienceParagraphs = [
@@ -723,11 +1012,20 @@ function generateWordExperienceSection() {
                 new TextRun({
                     text: "WORK EXPERIENCE",
                     bold: true,
-                    size: 24,
+                    size: 28,
                 }),
             ],
-            heading: HeadingLevel.HEADING_2,
-            spacing: { before: 400, after: 200 },
+            spacing: { before: 200, after: 50 },
+        }),
+        new Paragraph({
+            children: [
+                new TextRun({
+                    text: "________________________________________________________________",
+                    size: 16,
+                    color: "666666"
+                })
+            ],
+            spacing: { after: 150 },
         }),
     ];
 
@@ -741,7 +1039,7 @@ function generateWordExperienceSection() {
             experienceParagraphs.push(
                 new Paragraph({
                     children: [],
-                    spacing: { after: 200 },
+                    spacing: { after: 100 },
                 })
             );
         }
@@ -752,29 +1050,29 @@ function generateWordExperienceSection() {
                     new TextRun({
                         text: title,
                         bold: true,
-                        size: 22,
+                        size: 24,
                     }),
                 ],
-                spacing: { after: 100 },
+                spacing: { after: 90 },
             }),
             new Paragraph({
                 children: [
                     new TextRun({
                         text: company,
-                        size: 20,
+                        size: 22,
                     }),
                 ],
-                spacing: { after: 100 },
+                spacing: { after: 80 },
             }),
             new Paragraph({
                 children: [
                     new TextRun({
                         text: period,
                         italics: true,
-                        size: 18,
+                        size: 20,
                     }),
                 ],
-                spacing: { after: 100 },
+                spacing: { after: 80 },
             }),
             new Paragraph({
                 children: [
@@ -783,16 +1081,23 @@ function generateWordExperienceSection() {
                         size: 20,
                     }),
                 ],
-                spacing: { after: 200 },
+                spacing: { after: 60 },
             })
         );
     });
+
+    experienceParagraphs.push(
+        new Paragraph({
+            children: [],
+            spacing: { after: 200 },
+        })
+    );
 
     return experienceParagraphs;
 }
 
 function generateWordAccomplishmentsSection() {
-    const { Paragraph, TextRun, HeadingLevel } = docx;
+    const { Paragraph, TextRun } = docx;
     const accomplishments = document.getElementById('accomplishments').value.split('\n').map(acc => acc.trim()).filter(acc => acc !== '');
     
     const accomplishmentsParagraphs = [
@@ -801,11 +1106,20 @@ function generateWordAccomplishmentsSection() {
                 new TextRun({
                     text: "ACCOMPLISHMENTS",
                     bold: true,
-                    size: 24,
+                    size: 28,
                 }),
             ],
-            heading: HeadingLevel.HEADING_2,
-            spacing: { before: 400, after: 200 },
+            spacing: { before: 200, after: 50 },
+        }),
+        new Paragraph({
+            children: [
+                new TextRun({
+                    text: "________________________________________________________________",
+                    size: 16,
+                    color: "666666"
+                })
+            ],
+            spacing: { after: 150 },
         }),
     ];
 
@@ -819,9 +1133,23 @@ function generateWordAccomplishmentsSection() {
                     }),
                 ],
                 spacing: { after: 100 },
+                indent: { left: 200 }, // Add indent for bullet points
             })
         );
     });
 
+    accomplishmentsParagraphs.push(
+        new Paragraph({
+            children: [],
+            spacing: { after: 200 },
+        })
+    );
+
     return accomplishmentsParagraphs;
+}
+}
+}
+}
+}
+}
 }
