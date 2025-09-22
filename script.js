@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('resumeForm').addEventListener('submit', function(e) {
         e.preventDefault();
         generatePDF();
+        generateWord();
     });
 
     document.getElementById('addWorkExperience').addEventListener('click', function() {
@@ -445,4 +446,382 @@ function addAccomplishmentsSection(doc, yPosition) {
     });
 
     return yPosition;
+}
+
+async function generateWord() {
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, TabStopPosition, TabStopType, BorderStyle } = docx;
+
+    // Get form data
+    const name = document.getElementById('name').value;
+    const phone = document.getElementById('phone').value;
+    const email = document.getElementById('email').value;
+
+    // Create sections based on the draggable order
+    const sectionsContainer = document.getElementById('draggableSections');
+    const orderedSections = Array.from(sectionsContainer.children);
+    
+    const documentSections = [];
+
+    // Header with name and contact info
+    documentSections.push(
+        new Paragraph({
+            children: [
+                new TextRun({
+                    text: name.toUpperCase(),
+                    bold: true,
+                    size: 48,
+                }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 200 },
+        }),
+        new Paragraph({
+            children: [
+                new TextRun({
+                    text: `${phone} | ${email}`,
+                    size: 20,
+                }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 400 },
+        }),
+    );
+
+    // Process each section in the draggable order
+    orderedSections.forEach(sectionElement => {
+        const sectionType = sectionElement.getAttribute('data-section');
+        
+        switch(sectionType) {
+            case 'summary':
+                documentSections.push(...generateWordSummarySection());
+                break;
+            case 'skills':
+                documentSections.push(...generateWordSkillsSection());
+                break;
+            case 'education':
+                documentSections.push(...generateWordEducationSection());
+                break;
+            case 'certifications':
+                documentSections.push(...generateWordCertificationsSection());
+                break;
+            case 'experience':
+                documentSections.push(...generateWordExperienceSection());
+                break;
+            case 'accomplishments':
+                documentSections.push(...generateWordAccomplishmentsSection());
+                break;
+        }
+    });
+
+    const doc = new Document({
+        sections: [{
+            properties: {},
+            children: documentSections,
+        }],
+    });
+
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, "resume.docx");
+}
+
+function generateWordSummarySection() {
+    const { Paragraph, TextRun, HeadingLevel } = docx;
+    const summary = document.getElementById('summary').value;
+    
+    return [
+        new Paragraph({
+            children: [
+                new TextRun({
+                    text: "PROFESSIONAL SUMMARY",
+                    bold: true,
+                    size: 24,
+                }),
+            ],
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 400, after: 200 },
+        }),
+        new Paragraph({
+            children: [
+                new TextRun({
+                    text: summary,
+                    size: 20,
+                }),
+            ],
+            spacing: { after: 300 },
+        }),
+    ];
+}
+
+function generateWordSkillsSection() {
+    const { Paragraph, TextRun, HeadingLevel } = docx;
+    const skills = document.getElementById('skills').value.split(',').map(skill => skill.trim());
+    
+    const skillsParagraphs = [
+        new Paragraph({
+            children: [
+                new TextRun({
+                    text: "SKILLS",
+                    bold: true,
+                    size: 24,
+                }),
+            ],
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 400, after: 200 },
+        }),
+    ];
+
+    // Create bullet points for skills
+    skills.forEach(skill => {
+        skillsParagraphs.push(
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: `• ${skill}`,
+                        size: 20,
+                    }),
+                ],
+                spacing: { after: 100 },
+            })
+        );
+    });
+
+    skillsParagraphs.push(
+        new Paragraph({
+            children: [],
+            spacing: { after: 200 },
+        })
+    );
+
+    return skillsParagraphs;
+}
+
+function generateWordEducationSection() {
+    const { Paragraph, TextRun, HeadingLevel } = docx;
+    const educationEntries = document.querySelectorAll('.education-entry');
+    
+    const educationParagraphs = [
+        new Paragraph({
+            children: [
+                new TextRun({
+                    text: "EDUCATION",
+                    bold: true,
+                    size: 24,
+                }),
+            ],
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 400, after: 200 },
+        }),
+    ];
+
+    educationEntries.forEach((entry, index) => {
+        const degree = entry.querySelector('.degree').value;
+        const university = entry.querySelector('.university').value;
+        const year = entry.querySelector('.year').value;
+
+        if (index > 0) {
+            educationParagraphs.push(
+                new Paragraph({
+                    children: [],
+                    spacing: { after: 100 },
+                })
+            );
+        }
+
+        educationParagraphs.push(
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: degree,
+                        bold: true,
+                        size: 22,
+                    }),
+                ],
+                spacing: { after: 100 },
+            }),
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: `${university}, ${year}`,
+                        size: 20,
+                    }),
+                ],
+                spacing: { after: 200 },
+            })
+        );
+    });
+
+    return educationParagraphs;
+}
+
+function generateWordCertificationsSection() {
+    const { Paragraph, TextRun, HeadingLevel } = docx;
+    const certificationEntries = document.querySelectorAll('.certification-entry');
+    
+    if (certificationEntries.length === 0) return [];
+    
+    const certificationParagraphs = [
+        new Paragraph({
+            children: [
+                new TextRun({
+                    text: "CERTIFICATIONS",
+                    bold: true,
+                    size: 24,
+                }),
+            ],
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 400, after: 200 },
+        }),
+    ];
+
+    certificationEntries.forEach((entry, index) => {
+        const certName = entry.querySelector('.certification-name').value;
+        const certOrg = entry.querySelector('.certification-org').value;
+        const certDate = entry.querySelector('.certification-date').value;
+
+        if (index > 0) {
+            certificationParagraphs.push(
+                new Paragraph({
+                    children: [],
+                    spacing: { after: 100 },
+                })
+            );
+        }
+
+        certificationParagraphs.push(
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: certName,
+                        bold: true,
+                        size: 22,
+                    }),
+                ],
+                spacing: { after: 100 },
+            }),
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: `${certOrg} | ${certDate}`,
+                        size: 20,
+                    }),
+                ],
+                spacing: { after: 200 },
+            })
+        );
+    });
+
+    return certificationParagraphs;
+}
+
+function generateWordExperienceSection() {
+    const { Paragraph, TextRun, HeadingLevel } = docx;
+    const workExperiences = document.querySelectorAll('.work-experience');
+    
+    const experienceParagraphs = [
+        new Paragraph({
+            children: [
+                new TextRun({
+                    text: "WORK EXPERIENCE",
+                    bold: true,
+                    size: 24,
+                }),
+            ],
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 400, after: 200 },
+        }),
+    ];
+
+    workExperiences.forEach((exp, index) => {
+        const company = exp.querySelector('.company').value;
+        const title = exp.querySelector('.title').value;
+        const period = exp.querySelector('.period').value;
+        const description = exp.querySelector('.description').value;
+
+        if (index > 0) {
+            experienceParagraphs.push(
+                new Paragraph({
+                    children: [],
+                    spacing: { after: 200 },
+                })
+            );
+        }
+
+        experienceParagraphs.push(
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: title,
+                        bold: true,
+                        size: 22,
+                    }),
+                ],
+                spacing: { after: 100 },
+            }),
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: company,
+                        size: 20,
+                    }),
+                ],
+                spacing: { after: 100 },
+            }),
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: period,
+                        italics: true,
+                        size: 18,
+                    }),
+                ],
+                spacing: { after: 100 },
+            }),
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: description,
+                        size: 20,
+                    }),
+                ],
+                spacing: { after: 200 },
+            })
+        );
+    });
+
+    return experienceParagraphs;
+}
+
+function generateWordAccomplishmentsSection() {
+    const { Paragraph, TextRun, HeadingLevel } = docx;
+    const accomplishments = document.getElementById('accomplishments').value.split('\n').map(acc => acc.trim()).filter(acc => acc !== '');
+    
+    const accomplishmentsParagraphs = [
+        new Paragraph({
+            children: [
+                new TextRun({
+                    text: "ACCOMPLISHMENTS",
+                    bold: true,
+                    size: 24,
+                }),
+            ],
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 400, after: 200 },
+        }),
+    ];
+
+    accomplishments.forEach(accomplishment => {
+        accomplishmentsParagraphs.push(
+            new Paragraph({
+                children: [
+                    new TextRun({
+                        text: `• ${accomplishment}`,
+                        size: 20,
+                    }),
+                ],
+                spacing: { after: 100 },
+            })
+        );
+    });
+
+    return accomplishmentsParagraphs;
 }
