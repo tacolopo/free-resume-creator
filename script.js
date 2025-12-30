@@ -1147,9 +1147,3 @@ function generateWordAccomplishmentsSection() {
 
     return accomplishmentsParagraphs;
 }
-}
-}
-}
-}
-}
-}
